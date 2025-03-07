@@ -1,4 +1,4 @@
-# BuildingLanguageResources_AitorT_LynaT_JonA
+# Hate Speech in the Political Domain: The Milei Corpus
 
 ## Description
 
