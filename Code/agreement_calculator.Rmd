@@ -1,0 +1,161 @@
+---
+title: "Agreement"
+output: html_document
+date: "2025-02-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("irr")
+##load the library
+library(irr)
+```
+
+```{r}
+######## reading the file #############
+
+#use r studios interface or put ypur path. Make sure to select the appropiate delimitators
+
+data1 <- read.csv("")
+
+##check the data
+head(data1)
+
+```
+
+```{r}
+
+hate_speech_anno <- data1[, 14:16]
+print(hate_speech_anno)
+# 
+# ######## applying the ITA functions #############
+# 
+print("Observed agreement")
+agree(hate_speech_anno)
+# 
+# 
+# ## calculate fleiss' kappa (for more than two annotators)
+print("Fleiss' kappa")
+kappam.fleiss(hate_speech_anno)
+
+```
+```{r}
+
+target_anno <- data1[, 2:4]
+print(target_anno)
+# 
+# ######## applying the ITA functions #############
+# 
+print("Observed agreement")
+agree(target_anno)
+# 
+# 
+# ## calculate fleiss' kappa (for more than two annotators)
+print("Fleiss' kappa")
+kappam.fleiss(target_anno)
+
+```
+
+```{r}
+
+topic_anno <- data1[, 5:7]
+print(topic_anno)
+
+process_annotator <- function(column) {
+  labels_list <- lapply(column, function(x) {
+    if (is.na(x) || x == "") { # Handle missing or empty values
+      return(character(0))
+    } else {
+      trimws(unlist(strsplit(x, ", "))) #split using ", "
+    }
+  })
+  return(labels_list)
+}
+
+topic_anno_1 <- process_annotator(topic_anno[, 1])
+topic_anno_2 <- process_annotator(topic_anno[, 2])
+topic_anno_3 <- process_annotator(topic_anno[, 3])
+
+create_binary_matrix <- function(labels_list, unique_labels) {
+  binary_matrix <- matrix(0, nrow = length(labels_list), ncol = length(unique_labels))
+  colnames(binary_matrix) <- unique_labels
+
+  for (i in 1:length(labels_list)) {
+    for (label in labels_list[[i]]) {
+      if (label %in% unique_labels) {
+        binary_matrix[i, label] <- 1
+      }
+    }
+  }
+  return(binary_matrix)
+}
+
+unique_labels <- c("Policy", "Origin", "Ideology", "Sexuality")
+
+binary_matrix_1 <- create_binary_matrix(topic_anno_1, unique_labels)
+binary_matrix_2 <- create_binary_matrix(topic_anno_2, unique_labels)
+binary_matrix_3 <- create_binary_matrix(topic_anno_3, unique_labels)
+
+# Combine binary matrices into a 3D array for Fleiss' kappa
+combined_binary_array <- array(0, dim = c(nrow(binary_matrix_1), 3, ncol(binary_matrix_1)),
+                               dimnames = list(NULL, c("Rater1", "Rater2", "Rater3"), unique_labels))
+
+for (i in 1:ncol(binary_matrix_1)) {
+  combined_binary_array[, 1, i] <- binary_matrix_1[, i]
+  combined_binary_array[, 2, i] <- binary_matrix_2[, i]
+  combined_binary_array[, 3, i] <- binary_matrix_3[, i]
+}
+
+# Calculate Fleiss' kappa for each category
+kappa_values <- numeric(ncol(binary_matrix_1))
+names(kappa_values) <- unique_labels
+
+for (i in 1:ncol(binary_matrix_1)) {
+  category_matrix <- combined_binary_array[, , i]
+  kappa_values[i] <- kappam.fleiss(category_matrix)$value
+}
+
+# Print category-wise kappa values
+print("Category-wise Fleiss' kappa:")
+print(kappa_values)
+
+# Calculate average kappa
+average_kappa <- mean(kappa_values)
+print(paste("Average Fleiss' kappa:", average_kappa))
+
+
+```
+
+```{r}
+
+attack_defend_anno <- data1[, 8:10]
+print(attack_defend_anno)
+# 
+# ######## applying the ITA functions #############
+# 
+print("Observed agreement")
+agree(attack_defend_anno)
+# 
+# 
+# ## calculate fleiss' kappa (for more than two annotators)
+print("Fleiss' kappa")
+kappam.fleiss(attack_defend_anno)
+
+```
+
+```{r}
+
+violence_anno <- data1[, 11:13]
+print(violence_anno)
+# 
+# ######## applying the ITA functions #############
+# 
+print("Observed agreement")
+agree(violence_anno)
+# 
+# 
+# ## calculate fleiss' kappa (for more than two annotators)
+print("Fleiss' kappa")
+kappam.fleiss(violence_anno)
+
+```
